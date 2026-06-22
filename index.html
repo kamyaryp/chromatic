@@ -49,8 +49,8 @@
   .living-gradient__base{
     position:absolute; inset:0;
     background:
-      radial-gradient(75% 60% at 90% 8%, #facf2e 0%, rgba(250,170,60,0) 55%),
-      radial-gradient(80% 70% at 88% 52%, #f4262f 0%, rgba(244,38,47,0) 55%),
+      radial-gradient(64% 51% at 92% 6%, #facf2e 0%, rgba(250,170,60,0) 52%),
+      radial-gradient(84% 74% at 88% 52%, #f4262f 0%, rgba(244,38,47,0) 58%),
       radial-gradient(85% 80% at 10% 38%, #6a3cff 0%, rgba(106,60,255,0) 58%),
       radial-gradient(80% 80% at 20% 66%, #c63cd8 0%, #e23a92 45%, rgba(226,58,146,0) 80%),
       linear-gradient(150deg, #3f6bff 0%, #b23cf0 26%, #f23a78 54%, #f8693f 80%, #facf2e 100%);
@@ -171,6 +171,10 @@
       // is always on screen (cool corner -> warm corner, like the image), then
       // warped by the organic field so it drifts. This is what makes the cool
       // colours actually show instead of hiding in the noise's mid-range.
+      // Hue is laid across the panel as a flowing diagonal so the WHOLE palette
+      // is always on screen (cool corner -> warm corner, like the image), then
+      // warped by the organic field so it drifts. This is what makes the cool
+      // colours actually show instead of hiding in the noise's mid-range.
       float g = dot(nuv, vec2(0.55, 0.45));         // diagonal position, 0..1
       g += 0.42 * (f - 0.5);                         // warp with the flow field
       g += 0.10 * (q.x - 0.5) + 0.08 * sin(t * 0.8); // gentle extra drift
@@ -189,9 +193,9 @@
       col = mix(col, cPurple,  smoothstep(0.04, 0.20, g));
       col = mix(col, cMagenta, smoothstep(0.16, 0.34, g));
       col = mix(col, cPink,    smoothstep(0.30, 0.48, g));
-      col = mix(col, cRed,     smoothstep(0.44, 0.62, g));
-      col = mix(col, cOrange,  smoothstep(0.58, 0.78, g));
-      col = mix(col, cGold,    smoothstep(0.74, 0.94, g));
+      col = mix(col, cRed,     smoothstep(0.4325, 0.6125, g));
+      col = mix(col, cOrange,  smoothstep(0.5875, 0.7875, g));
+      col = mix(col, cGold,    smoothstep(0.765, 0.965, g));
 
       // brightness + midtone lift (lower gamma = brighter)
       col = pow(col, vec3(0.86));        // midtone/shadow lift
@@ -199,7 +203,7 @@
 
       // saturation & contrast (1.0 = unchanged)
       float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-      col = mix(vec3(lum), col, 0.95);   // saturation
+      col = mix(vec3(lum), col, 0.7695); // saturation
       col = (col - 0.5) * 0.95 + 0.5;    // contrast
 
       // soft, gentle vignette (kept very light so the result stays bright)
