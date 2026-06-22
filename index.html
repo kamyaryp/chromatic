@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Chromatic</title>
+<title>Living gradient — animated background</title>
 
 <style>
   *{ box-sizing: border-box; }
@@ -49,7 +49,7 @@
   .living-gradient__base{
     position:absolute; inset:0;
     background:
-      radial-gradient(64% 51% at 92% 6%, #facf2e 0%, rgba(250,170,60,0) 52%),
+      radial-gradient(64% 51% at 92% 6%, #ebb847 0%, rgba(235,184,71,0) 52%),
       radial-gradient(84% 74% at 88% 52%, #f4262f 0%, rgba(244,38,47,0) 58%),
       radial-gradient(85% 80% at 10% 38%, #6a3cff 0%, rgba(106,60,255,0) 58%),
       radial-gradient(80% 80% at 20% 66%, #c63cd8 0%, #e23a92 45%, rgba(226,58,146,0) 80%),
@@ -147,7 +147,7 @@
     }
     float fbm(vec2 p){
       float v = 0.0, amp = 0.5;
-      for(int i=0;i<5;i++){ v += amp*noise(p); p *= 2.0; amp *= 0.5; }
+      for(int i=0;i<3;i++){ v += amp*noise(p); p *= 2.0; amp *= 0.5; }
       return v;
     }
 
@@ -161,23 +161,17 @@
       vec2  nuv = gl_FragCoord.xy / u_resolution.xy; // 0..1, only for the vignette
       float t = u_time * 0.04374;
 
-      // two passes of domain warping -> slow liquid motion
+      // two passes of domain warping -> slow, flowing liquid motion
       vec2 q = vec2(fbm(uv + t), fbm(uv + vec2(5.2,1.3) - t));
       vec2 r = vec2(fbm(uv + 4.0*q + vec2(1.7,9.2) + 0.15*t),
                     fbm(uv + 4.0*q + vec2(8.3,2.8) - 0.13*t));
       float f = fbm(uv + 4.0*r);
 
-      // Hue is laid across the panel as a flowing diagonal so the WHOLE palette
-      // is always on screen (cool corner -> warm corner, like the image), then
-      // warped by the organic field so it drifts. This is what makes the cool
-      // colours actually show instead of hiding in the noise's mid-range.
-      // Hue is laid across the panel as a flowing diagonal so the WHOLE palette
-      // is always on screen (cool corner -> warm corner, like the image), then
-      // warped by the organic field so it drifts. This is what makes the cool
-      // colours actually show instead of hiding in the noise's mid-range.
+      // Hue spreads across the panel as a flowing diagonal so the whole palette
+      // shows (cool corner -> warm corner), warped by the liquid field so it drifts.
       float g = dot(nuv, vec2(0.55, 0.45));         // diagonal position, 0..1
-      g += 0.42 * (f - 0.5);                         // warp with the flow field
-      g += 0.10 * (q.x - 0.5) + 0.08 * sin(t * 0.8); // gentle extra drift
+      g += 0.42 * (f - 0.5);                         // warp with the liquid field
+      g += 0.12 * (q.x - 0.5) + 0.10 * sin(u_time * 0.25 + 4.0 * q.y); // livelier, traveling drift
       g = clamp(g, 0.0, 1.0);
 
       // blue -> purple -> magenta -> pink -> red -> orange -> gold
@@ -187,7 +181,7 @@
       vec3 cPink    = vec3(0.97, 0.24, 0.62);  // hot pink
       vec3 cRed     = vec3(0.97, 0.18, 0.22);  // red
       vec3 cOrange  = vec3(0.99, 0.50, 0.18);  // orange
-      vec3 cGold    = vec3(1.00, 0.82, 0.24);  // gold
+      vec3 cGold    = vec3(0.92, 0.72, 0.28);  // gold (toned down)
 
       vec3 col = cBlue;
       col = mix(col, cPurple,  smoothstep(0.04, 0.20, g));
