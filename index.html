@@ -149,7 +149,13 @@
     }
 
     void main(){
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+      // Aspect-correct, uniformly-scaled coordinates so the pattern keeps its
+      // shape and never stretches when the element resizes. Anchored to the
+      // shorter side; identical to the old look when the box is square — a
+      // wider/taller box just reveals more of the flow instead of distorting it.
+      float s   = min(u_resolution.x, u_resolution.y);
+      vec2  uv  = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / s + 0.5;
+      vec2  nuv = gl_FragCoord.xy / u_resolution.xy; // 0..1, only for the vignette
       float t = u_time * 0.054;
 
       // two passes of domain warping -> slow liquid motion
@@ -172,7 +178,7 @@
       col = pow(col, vec3(0.94));
 
       // soft vignette so the rim stays rich
-      float d = distance(uv, vec2(0.5));
+      float d = distance(nuv, vec2(0.5));
       col *= 0.85 + 0.22 * smoothstep(0.95, 0.30, d);
 
       gl_FragColor = vec4(col, 1.0);
