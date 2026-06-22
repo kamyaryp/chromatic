@@ -49,10 +49,11 @@
   .living-gradient__base{
     position:absolute; inset:0;
     background:
-      radial-gradient(80% 65% at 84% 12%, #facf2e 0%, rgba(250,162,58,0) 58%),
-      radial-gradient(85% 80% at 10% 50%, #c92fda 0%, #e8359a 40%, rgba(232,53,154,0) 74%),
-      radial-gradient(120% 95% at 96% 80%, #f41b2d 0%, rgba(244,27,45,0) 56%),
-      linear-gradient(160deg, #f97f54 0%, #f4406f 42%, #f63a55 72%, #ef2f86 100%);
+      radial-gradient(75% 60% at 90% 8%, #facf2e 0%, rgba(250,170,60,0) 55%),
+      radial-gradient(80% 70% at 88% 52%, #f4262f 0%, rgba(244,38,47,0) 55%),
+      radial-gradient(85% 80% at 10% 38%, #6a3cff 0%, rgba(106,60,255,0) 58%),
+      radial-gradient(80% 80% at 20% 66%, #c63cd8 0%, #e23a92 45%, rgba(226,58,146,0) 80%),
+      linear-gradient(150deg, #3f6bff 0%, #b23cf0 26%, #f23a78 54%, #f8693f 80%, #facf2e 100%);
     background-size:200% 200%;
   }
 
@@ -166,33 +167,44 @@
                     fbm(uv + 4.0*q + vec2(8.3,2.8) - 0.13*t));
       float f = fbm(uv + 4.0*r);
 
-      // Palette sampled from bg.png: violet -> purple-magenta -> hot pink ->
-      // red -> orange -> gold. Warm (red/orange/gold) holds the larger range so
-      // it stays dominant, with a strong magenta/violet pocket at the low end.
-      vec3 cV = vec3(0.60, 0.10, 0.66);  // deep violet
-      vec3 cP = vec3(0.79, 0.18, 0.85);  // purple-magenta
-      vec3 cM = vec3(0.95, 0.22, 0.65);  // hot pink
-      vec3 cR = vec3(0.96, 0.11, 0.18);  // red
-      vec3 cO = vec3(0.98, 0.45, 0.16);  // orange
-      vec3 cG = vec3(0.98, 0.81, 0.20);  // gold
+      // Hue is laid across the panel as a flowing diagonal so the WHOLE palette
+      // is always on screen (cool corner -> warm corner, like the image), then
+      // warped by the organic field so it drifts. This is what makes the cool
+      // colours actually show instead of hiding in the noise's mid-range.
+      float g = dot(nuv, vec2(0.55, 0.45));         // diagonal position, 0..1
+      g += 0.42 * (f - 0.5);                         // warp with the flow field
+      g += 0.10 * (q.x - 0.5) + 0.08 * sin(t * 0.8); // gentle extra drift
+      g = clamp(g, 0.0, 1.0);
 
-      vec3 col = mix(cV, cP, smoothstep(0.00, 0.22, f));
-      col = mix(col, cM, smoothstep(0.14, 0.38, f + 0.08*r.x));
-      col = mix(col, cR, smoothstep(0.34, 0.54, f + 0.12*r.x));
-      col = mix(col, cO, smoothstep(0.50, 0.74, f + 0.15*q.y));
-      col = mix(col, cG, smoothstep(0.72, 1.00, f + 0.16*q.y));
+      // blue -> purple -> magenta -> pink -> red -> orange -> gold
+      vec3 cBlue    = vec3(0.20, 0.45, 0.97);  // blue
+      vec3 cPurple  = vec3(0.52, 0.26, 0.94);  // purple / violet
+      vec3 cMagenta = vec3(0.82, 0.20, 0.88);  // purple-magenta
+      vec3 cPink    = vec3(0.97, 0.24, 0.62);  // hot pink
+      vec3 cRed     = vec3(0.97, 0.18, 0.22);  // red
+      vec3 cOrange  = vec3(0.99, 0.50, 0.18);  // orange
+      vec3 cGold    = vec3(1.00, 0.82, 0.24);  // gold
 
-      // gentle midtone lift
-      col = pow(col, vec3(0.94));
+      vec3 col = cBlue;
+      col = mix(col, cPurple,  smoothstep(0.04, 0.20, g));
+      col = mix(col, cMagenta, smoothstep(0.16, 0.34, g));
+      col = mix(col, cPink,    smoothstep(0.30, 0.48, g));
+      col = mix(col, cRed,     smoothstep(0.44, 0.62, g));
+      col = mix(col, cOrange,  smoothstep(0.58, 0.78, g));
+      col = mix(col, cGold,    smoothstep(0.74, 0.94, g));
 
-      // saturation & contrast (1.0 = unchanged; both lowered 5%)
+      // brightness + midtone lift (lower gamma = brighter)
+      col = pow(col, vec3(0.86));        // midtone/shadow lift
+      col *= 1.06;                       // brightness (1.0 = unchanged)
+
+      // saturation & contrast (1.0 = unchanged)
       float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
       col = mix(vec3(lum), col, 0.95);   // saturation
       col = (col - 0.5) * 0.95 + 0.5;    // contrast
 
-      // soft, gentle vignette (kept light to match the flat, bright image)
+      // soft, gentle vignette (kept very light so the result stays bright)
       float d = distance(nuv, vec2(0.5));
-      col *= 0.90 + 0.14 * smoothstep(0.95, 0.30, d);
+      col *= 0.96 + 0.10 * smoothstep(0.95, 0.30, d);
 
       gl_FragColor = vec4(col, 1.0);
     }
