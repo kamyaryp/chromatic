@@ -69,6 +69,7 @@
         is just a fallback so grain still shows if JS is disabled. */
   .living-gradient__grain{
     position:absolute; inset:0;
+    display:none;              /* grain is baked into the shader now; this layer is the no-WebGL fallback only */
     mix-blend-mode:overlay;
     opacity:.2125;
     image-rendering:pixelated;
@@ -79,6 +80,7 @@
 
   /* ---- NO-WEBGL FALLBACK: animate the base gradient instead ------------- */
   .no-webgl .living-gradient__canvas{ display:none; }
+  .no-webgl .living-gradient__grain{ display:block; }
   .no-webgl .living-gradient__base{ animation: lg-drift 21.8s ease-in-out infinite; }
   @keyframes lg-drift{ 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
 
@@ -203,6 +205,12 @@
       // soft, gentle vignette (kept very light so the result stays bright)
       float d = distance(nuv, vec2(0.5));
       col *= 0.96 + 0.10 * smoothstep(0.95, 0.30, d);
+
+      // film grain, evaluated per fragment so it never tiles. Quantised to ~2px
+      // cells so it actually reads on high-DPI screens (1px cells were too fine).
+      vec2 gp = floor(gl_FragCoord.xy * 0.5);
+      float gn = fract(sin(dot(gp, vec2(12.9898, 78.233))) * 43758.5453);
+      col += (gn - 0.5) * 0.103;
 
       gl_FragColor = vec4(col, 1.0);
     }
